@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>🎁 拆礼物 · 生日快乐</title>
+  <meta name="description" content="可爱礼物盒 → 祝福信，点击开启并伴随彩带特效。支持 URL 参数：name/msg/from。" />
+  <style>
+    :root{
+      --bg1:#ffe9f0; --bg2:#fff6e8; --ink:#3b3b3b; --muted:#7a7a7a;
+      --pink:#ff7aa2; --peach:#ffb3c1; --yolk:#ffd166; --mint:#8ee3c3; --sky:#a8d8ff;
+      --card:#fff; --radius:22px; --shadow:0 10px 30px rgba(0,0,0,.12);
+    }
+    body{margin:0;min-height:100svh;display:grid;place-items:center;color:var(--ink);
+      font-family:"PingFang SC","Microsoft YaHei",system-ui,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 800px at 20% 10%,#fff,transparent 60%),
+                  radial-gradient(900px 900px at 90% 20%,#fff,transparent 60%),
+                  linear-gradient(125deg,var(--bg1),var(--bg2));
+      overflow:hidden;
+    }
+    .floaty{position:fixed;inset:0;pointer-events:none}
+    .chip{position:absolute;font-size:20px;opacity:.9;animation: drift linear infinite}
+    @keyframes drift{0%{transform:translateY(60vh) translateX(0) rotate(0deg)}100%{transform:translateY(-80vh) translateX(0) rotate(360deg)}}
+    .stage{position:relative; width:min(92vw,440px); height:min(86vh,760px);}  
+    .gift{position:absolute; inset:0; display:grid; place-items:center;}
+    .boxWrap{position:relative; width:min(76vw,360px); height:270px;}
+    .box{position:absolute; left:0; right:0; bottom:0; margin:auto; width:100%; height:68%;
+      background:linear-gradient(#fff,#ffe6ee); border-radius:20px; box-shadow: var(--shadow);
+      border:3px solid #ffd4e2;
+      display:flex; align-items:center; justify-content:center;
+      animation: bob 2.2s ease-in-out infinite;
+    }
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .ribbonV{position:absolute; top:0; bottom:0; left:50%; width:14%; transform:translateX(-50%);
+      background:linear-gradient(180deg,var(--pink),#ff447a); border-radius:12px}
+    .ribbonH{position:absolute; left:10%; right:10%; top:38%; height:14%;
+      background:linear-gradient(180deg,var(--pink),#ff447a); border-radius:12px}
+    .lid{position:absolute; left:0; right:0; margin:auto; bottom:64%; width:108%; height:34%;
+      background:linear-gradient(#ffe0ea,#ffd1e0); border:3px solid #ffd4e2; border-radius:18px; box-shadow: var(--shadow);
+      transform-origin: left bottom; transition: transform .9s cubic-bezier(.2,.8,.2,1);
+    }
+    .bow{position:absolute; left:50%; top:-14px; transform:translateX(-50%); width:92px; height:48px}
+    .bow:before,.bow:after{content:""; position:absolute; width:46px; height:34px; border-radius:12px 12px 2px 12px; background:var(--pink); box-shadow: inset -6px -8px 10px #0002}
+    .bow:before{right:52px; transform: rotate(-12deg)}
+    .bow:after{left:52px; border-radius:12px 12px 12px 2px; transform: rotate(12deg)}
+    .face{position:absolute; top:38%; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:18px}
+    .eye{width:14px; height:14px; background:#333; border-radius:50%; box-shadow:0 0 0 3px #fff8}
+    .blush{width:16px; height:10px; background:linear-gradient(#ffb5c5,#ff87a3); border-radius:999px; opacity:.7}
+    .smile{width:44px; height:22px; border:3px solid #333; border-top:0; border-radius:0 0 24px 24px; margin:0 6px}
+    .hint{position:absolute; bottom:-36px; left:0; right:0; text-align:center; color:var(--muted); font-size:12px}
+    .letterWrap{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none}
+    .letter{width:min(92vw,440px); background:var(--card); border-radius:var(--radius); box-shadow: var(--shadow);
+      padding:22px 18px 18px; transform: translateY(30px) scale(.98); opacity:0;
+      transition: transform .7s cubic-bezier(.2,.8,.2,1), opacity .6s ease;
+    }
+    .washi{position:absolute; left:50%; top:-10px; transform:translateX(-50%); width:120px; height:26px; border-radius:8px; background: repeating-linear-gradient(45deg, var(--sky), var(--sky) 8px, #fff 8px, #fff 16px, var(--yolk) 16px, var(--yolk) 24px); box-shadow:0 6px 10px #0001}
+    .subtitle{color:var(--muted); font-size:14px;}
+    .title{font-size: clamp(24px,6vw,34px); line-height:1.15; margin:6px 0}
+    .name{background:linear-gradient(90deg,#ff4d6d,#ff9a9e,#ffd166); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:800}
+    .content{font-size:clamp(15px,3.2vw,18px); line-height:1.9; margin-top:6px}
+    .from{color:var(--muted); font-size:13px; margin-top:14px}
+    .opened .lid{ transform: rotateX(16deg) rotateY(-160deg) translate(-6px, -6px); }
+    .opened .box{ animation: none; }
+    .opened .letter{ transform: translateY(0) scale(1); opacity:1; }
+
+    /* 彩带层 */
+    .confetti{position:fixed; inset:0; pointer-events:none; z-index:9999}
+
+    @media (prefers-reduced-motion: reduce){.box,.chip{animation:none}.lid{transition:none}}
+  </style>
+</head>
+<body>
+  <div class="floaty" id="floaty"></div>
+  <canvas class="confetti" id="confetti"></canvas>
+
+  <div class="stage" id="stage">
+    <div class="gift" id="gift">
+      <div class="boxWrap">
+        <div class="lid"><div class="bow"></div></div>
+        <div class="box">
+          <div class="ribbonV"></div>
+          <div class="ribbonH"></div>
+          <div class="face">
+            <span class="blush"></span>
+            <span class="eye"></span>
+            <span class="smile"></span>
+            <span class="eye"></span>
+            <span class="blush"></span>
+          </div>
+          <div class="hint">轻点拆礼物 · Tap to open</div>
+        </div>
+      </div>
+    </div>
+    <div class="letterWrap">
+      <article class="letter" id="letter" aria-hidden="true">
+        <span class="washi"></span>
+        <div class="subtitle">送给 <span class="name" id="who">你</span> 的</div>
+        <h1 class="title">🎀 生日快乐！</h1>
+        <p class="content" id="msg">愿你像小猫晒太阳一样惬意，像气泡水一样快乐，像小甜饼一样被温柔对待。新的一岁，元气满满！</p>
+        <div class="from" id="foot"></div>
+      </article>
+    </div>
+  </div>
+  <script>
+    // URL 参数
+    const P = new URLSearchParams(location.search);
+    const who = (P.get('name')||'你').trim();
+    const customMsg = (P.get('msg')||'愿你像小猫晒太阳一样惬意，像气泡水一样快乐，像小甜饼一样被温柔对待。新的一岁，元气满满！').trim();
+    const from = (P.get('from')||'').trim();
+    document.getElementById('who').textContent = who;
+    document.getElementById('msg').textContent = customMsg;
+    const ymd = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('foot').textContent = `${from?`来自 ${from} · `:''}${ymd}`;
+
+    // 背景可爱元素
+    const icons = ['💖','✨','🌟','🍬','🎀','🧁','🍓','🐻'];
+    const floaty = document.getElementById('floaty');
+    const count = Math.min(18, Math.max(10, Math.floor(window.innerWidth/44)));
+    for(let i=0;i<count;i++){
+      const s = document.createElement('span');
+      s.className='chip'; s.textContent=icons[i%icons.length];
+      s.style.left=(Math.random()*100)+'vw'; s.style.top='60vh';
+      s.style.animationDuration=(14+Math.random()*16)+'s'; s.style.animationDelay=(Math.random()*8)+'s';
+      floaty.appendChild(s);
+    }
+
+    // 彩带特效（点击时触发）
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [], animId = null;
+    function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+
+    function burstConfetti(N=140){
+      particles = [];
+      for(let i=0;i<N;i++){
+        particles.push({
+          x: W/2, y: H*0.42, // 盒子大致位置
+          vx: (Math.random()*2-1) * (4 + Math.random()*4),
+          vy: - (4 + Math.random()*6),
+          g: 0.15 + Math.random()*0.15,
+          size: 5 + Math.random()*6,
+          rot: Math.random()*360,
+          vr: (Math.random()*2-1)*8,
+          color: `hsl(${Math.random()*360},85%,60%)`,
+          life: 0, max: 60 + Math.random()*40
+        });
+      }
+      if(animId) cancelAnimationFrame(animId);
+      animate();
+    }
+
+    function animate(){
+      ctx.clearRect(0,0,W,H);
+      let alive = 0;
+      for(const p of particles){
+        p.life++; p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI/180);
+        ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size*0.6);
+        ctx.restore();
+        if(p.life < p.max) alive++;
+      }
+      particles = particles.filter(p=>p.life < p.max);
+      if(alive>0){ animId = requestAnimationFrame(animate); }
+    }
+
+    // 点击开启礼物 & 触发彩带
+    const stage=document.getElementById('stage');
+    function openGift(){
+      if(!document.body.classList.contains('opened')){
+        document.body.classList.add('opened');
+        document.getElementById('letter').setAttribute('aria-hidden','false');
+        if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+        burstConfetti();
+      }
+    }
+    stage.addEventListener('click', openGift, {passive:true});
+  </script>
+</body>
+</html>
