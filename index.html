@@ -59,13 +59,11 @@
     .name{background:linear-gradient(90deg,#ff4d6d,#ff9a9e,#ffd166); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:800}
     .content{font-size:clamp(15px,3.2vw,18px); line-height:1.9; margin-top:6px}
     .from{color:var(--muted); font-size:13px; margin-top:14px}
+    .version{color:#999; font-size:12px; text-align:center; margin-top:10px}
     .opened .lid{ transform: rotateX(16deg) rotateY(-160deg) translate(-6px, -6px); }
     .opened .box{ animation: none; }
     .opened .letter{ transform: translateY(0) scale(1); opacity:1; }
-
-    /* 彩带层 */
     .confetti{position:fixed; inset:0; pointer-events:none; z-index:9999}
-
     @media (prefers-reduced-motion: reduce){.box,.chip{animation:none}.lid{transition:none}}
   </style>
 </head>
@@ -96,86 +94,86 @@
         <span class="washi"></span>
         <div class="subtitle">送给 <span class="name" id="who">你</span> 的</div>
         <h1 class="title">🎀 生日快乐！</h1>
-        <p class="content" id="msg">一岁一礼，一寸欢喜。祝ssy生日快乐！</p>
+        <p class="content" id="msg">一岁一礼，一寸欢喜。祝 ssy 生日快乐！</p>
         <div class="from" id="foot"></div>
+        <div class="version" id="version"></div>
       </article>
     </div>
   </div>
+
   <script>
-    // URL 参数
+    // ===== URL 参数读取 =====
     const P = new URLSearchParams(location.search);
     const who = (P.get('name')||'你').trim();
-    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝ssy生日快乐！').trim();
+    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝 ssy 生日快乐！').trim();
     const from = (P.get('from')||'').trim();
     document.getElementById('who').textContent = who;
     document.getElementById('msg').textContent = customMsg;
     const ymd = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
     document.getElementById('foot').textContent = `${from?`来自 ${from} · `:''}${ymd}`;
 
-    // 背景可爱元素
+    // ===== 自动版本号 =====
+    const buildVersion = new Date().toISOString().slice(0,19).replace(/[-:T]/g,'');
+    document.getElementById('version').textContent = `版本号：v${buildVersion}`;
+
+    // ===== 背景漂浮元素 =====
     const icons = ['💖','✨','🌟','🍬','🎀','🧁','🍓','🐻'];
     const floaty = document.getElementById('floaty');
     const count = Math.min(18, Math.max(10, Math.floor(window.innerWidth/44)));
     for(let i=0;i<count;i++){
-      const s = document.createElement('span');
+      const s=document.createElement('span');
       s.className='chip'; s.textContent=icons[i%icons.length];
       s.style.left=(Math.random()*100)+'vw'; s.style.top='60vh';
       s.style.animationDuration=(14+Math.random()*16)+'s'; s.style.animationDelay=(Math.random()*8)+'s';
       floaty.appendChild(s);
     }
 
-    // 彩带特效（点击时触发）
-    const canvas = document.getElementById('confetti');
-    const ctx = canvas.getContext('2d');
-    let W, H, particles = [], animId = null;
-    function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
-
+    // ===== 彩带特效 =====
+    const canvas=document.getElementById('confetti'); const ctx=canvas.getContext('2d');
+    let W,H,particles=[],animId=null;
+    function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+    window.addEventListener('resize',resize); resize();
     function burstConfetti(N=140){
-      particles = [];
-      for(let i=0;i<N;i++){
-        particles.push({
-          x: W/2, y: H*0.42, // 盒子大致位置
-          vx: (Math.random()*2-1) * (4 + Math.random()*4),
-          vy: - (4 + Math.random()*6),
-          g: 0.15 + Math.random()*0.15,
-          size: 5 + Math.random()*6,
-          rot: Math.random()*360,
-          vr: (Math.random()*2-1)*8,
-          color: `hsl(${Math.random()*360},85%,60%)`,
-          life: 0, max: 60 + Math.random()*40
-        });
-      }
-      if(animId) cancelAnimationFrame(animId);
-      animate();
+      particles=[]; for(let i=0;i<N;i++){ particles.push({
+        x:W/2, y:H*0.42, vx:(Math.random()*2-1)*(4+Math.random()*4),
+        vy:-(4+Math.random()*6), g:0.15+Math.random()*0.15,
+        size:5+Math.random()*6, rot:Math.random()*360,
+        vr:(Math.random()*2-1)*8, color:`hsl(${Math.random()*360},85%,60%)`,
+        life:0, max:60+Math.random()*40
+      }); } if(animId) cancelAnimationFrame(animId); animate();
     }
-
     function animate(){
-      ctx.clearRect(0,0,W,H);
-      let alive = 0;
+      ctx.clearRect(0,0,W,H); let alive=0;
       for(const p of particles){
-        p.life++; p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-        ctx.save();
-        ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI/180);
-        ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size*0.6);
-        ctx.restore();
-        if(p.life < p.max) alive++;
+        p.life++; p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillStyle=p.color; ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size*0.6); ctx.restore();
+        if(p.life<p.max) alive++;
       }
-      particles = particles.filter(p=>p.life < p.max);
-      if(alive>0){ animId = requestAnimationFrame(animate); }
+      particles=particles.filter(p=>p.life<p.max);
+      if(alive>0){ animId=requestAnimationFrame(animate); }
     }
 
-    // 点击开启礼物 & 触发彩带
+    // ===== 点击开启礼物 + 彩带 =====
     const stage=document.getElementById('stage');
     function openGift(){
       if(!document.body.classList.contains('opened')){
         document.body.classList.add('opened');
         document.getElementById('letter').setAttribute('aria-hidden','false');
-        if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+        if(navigator.vibrate) try{navigator.vibrate(15);}catch(e){}
         burstConfetti();
       }
     }
-    stage.addEventListener('click', openGift, {passive:true});
+    ['click','touchstart','pointerdown'].forEach(evt=>{
+      stage.addEventListener(evt,openGift,{passive:true});
+    });
+
+    // ===== 自动刷新缓存参数（防止旧版本缓存） =====
+    if(!location.search.includes('v=')){
+      const url=new URL(location.href);
+      url.searchParams.set('v',buildVersion);
+      history.replaceState(null,'',url.toString());
+    }
   </script>
 </body>
 </html>
