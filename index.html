@@ -105,7 +105,7 @@
     // ===== URL 参数读取 =====
     const P = new URLSearchParams(location.search);
     const who = (P.get('name')||'你').trim();
-    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝 ssy 生日快乐！').trim();
+    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝石孙瑜生日快乐！').trim();
     const from = (P.get('from')||'').trim();
     document.getElementById('who').textContent = who;
     document.getElementById('msg').textContent = customMsg;
