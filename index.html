@@ -92,9 +92,9 @@
     <div class="letterWrap">
       <article class="letter" id="letter" aria-hidden="true">
         <span class="washi"></span>
-        <div class="subtitle">送给 <span class="name" id="who">你</span> 的</div>
+        <div class="subtitle">送给 <span class="name" id="who">赵辰溪</span> 的</div>
         <h1 class="title">🎀 生日快乐！</h1>
-        <p class="content" id="msg">一岁一礼，一寸欢喜。祝石孙瑜生日快乐！</p>
+        <p class="content" id="msg">一岁一礼，一寸欢喜。祝赵辰溪生日快乐！</p>
         <div class="from" id="foot"></div>
         <div class="version" id="version"></div>
       </article>
@@ -105,7 +105,7 @@
     // ===== URL 参数读取 =====
     const P = new URLSearchParams(location.search);
     const who = (P.get('name')||'你').trim();
-    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝石孙瑜生日快乐！').trim();
+    const customMsg = (P.get('msg')||'一岁一礼，一寸欢喜。祝赵辰溪生日快乐！').trim();
     const from = (P.get('from')||'').trim();
     document.getElementById('who').textContent = who;
     document.getElementById('msg').textContent = customMsg;
